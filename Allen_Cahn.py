@@ -1,7 +1,4 @@
-
-
 # Implementación de la estrategia "Causal training" para la PDE de Allen-Cahn
-# 
 
 import torch
 import torch.nn as nn
@@ -11,7 +8,7 @@ from IPython.display import HTML
 
 class PhysicsInformedNN(nn.Module):
     """
-    Red neuronal simple para PINN estándar
+    PINN estándar
     """
     def __init__(self, layers=[2, 128, 128, 128, 128, 1]):
         super(PhysicsInformedNN, self).__init__()
@@ -54,7 +51,7 @@ class CausalPINN:
         self.optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
         # Parámetros de la ecuación de Allen-Cahn
-        self.epsilon_ = 0.0001  # coeficiente de difusión
+        self.epsilon_ = 0.0001   # coeficiente de difusión
         self.lambda_ic = 100.0   # peso de condición inicial
         self.lambda_r = 1.0      # peso del residuo
 
@@ -103,7 +100,7 @@ class CausalPINN:
                      epsilon_causal=1, delta_stop=0.99,
                      verbose=True):
         """
-        Entrenamiento con estrategia CAUSAL
+        Entrenamiento con estrategia CAUSAL TRAINING
 
         Args:
             N_t: número de puntos temporales
@@ -174,11 +171,11 @@ class CausalPINN:
             # Verificar criterio de parada (todos los pesos > delta)
             if torch.min(w) > delta_stop:
                 if verbose:
-                    print(f"✅ Criterio de parada alcanzado en época {epoch}")
+                    print(f" Criterio de parada alcanzado en época {epoch}")
                     print(f"   min(w) = {torch.min(w).item():.4f} > {delta_stop}")
                 break
 
-            # Mostrar progreso   |||||||||||||||||||||||||||||||||
+            # Mostrar progreso   =============
             if verbose and (epoch % 1000 == 0):
                 print(f"Época {epoch:6d} | Loss_ic: {loss_ic_val.item():.3e} | "
                       f"Loss_res: {loss_res_val.item():.3e} | min(w): {torch.min(w).item():.3f}")
@@ -206,8 +203,7 @@ class CausalPINN:
 
 def generar_solucion_referencia(N_t=100, N_x=25600):
     """
-    Genera una solución de referencia de alta precisión
-    usando un esquema espectral (simulado)
+    Genera una solución de referencia 
     """
     t = np.linspace(0, 1, N_t)
     x = np.linspace(-1, 1, N_x)
@@ -216,7 +212,7 @@ def generar_solucion_referencia(N_t=100, N_x=25600):
 
     T, X = np.meshgrid(t, x, indexing='ij')
 
-    # Solución semi-analítica
+    # Solución analítica
 
     u_ref = X**2 * np.cos(np.pi * X) * np.exp(-T)
     return t, x, u_ref
@@ -374,11 +370,11 @@ if __name__ == "__main__":
     print("="*60)
 
     # Parámetros
-    N_t = 100      # puntos temporales
-    N_x = 256      # puntos espaciales
-    N_epochs = 300000
-    epsilon_causal = 100
-    delta_stop = 0.99
+    N_t = 100             # puntos temporales
+    N_x = 256             # puntos espaciales
+    N_epochs = 300000     # total de iteraciones 
+    epsilon_causal = 100  # parámetro de causalidad
+    delta_stop = 0.99     # umbral para detener el entrenamiento
 
     print(f"\nConfiguración:")
     print(f"  - Puntos temporales: {N_t}")
@@ -406,16 +402,16 @@ if __name__ == "__main__":
     )
 
     # Generar solución de referencia
-    print("\n📊 Generando solución de referencia...")
+    print("\n Generando solución de referencia...")
     t_train, x_train, u_ref = generar_solucion_referencia(N_t, N_x)
 
     # Presentar resultados
-    print("\n📈 Visualizando resultados...")
+    print("\n Visualizando resultados...")
     error = visualizar_resultados(causal_pinn, t_train, x_train, u_ref, history)
 
     # Error relativo
     error_relativo = np.linalg.norm(error) / np.linalg.norm(u_ref)
-    print(f"\n📊 Error relativo L² final: {error_relativo:.2%}")
+    print(f"\n Error relativo L² final: {error_relativo:.2%}")
 
 def plot_temporal_comparison(causal_pinn, t_train, x_train, u_ref, times_to_plot):
 
